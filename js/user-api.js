@@ -3,19 +3,17 @@
 const express = require('express')
 const bodyParser = require('body-parser');
 const cors = require('cors');
-const argon2 = require('argon2');
+const bcrypt = require('bcrypt');
 
-const app = express()
-const port = 3000
+const app = express();
+const port = 3000;
+const bcryptRounds = 12;
 
 app.use(cors());
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
-// PW JoJohnson: Jojo123
-// PW Alice: 1StrongPassword!
-// PW Admin: @qr3MawrtT34!W-
 
 let users = [{
     "id": 1,
@@ -23,7 +21,7 @@ let users = [{
     "name": "Johnathan Johnson",
     "age": 20,
     "email": "J.Johnson@example.com",
-    "password": "$argon2i$v=19$m=4096,t=3,p=1$Rp/xPwROxCcGubQ+fPq2Ww$j8d4Nz/navMj/WnmdjFRoPTwgYZ7mZXaFq12agetllg",
+    "password": bcrypt.hashSync("Jojo123", bcryptRounds),
 },
 {
     "id": 2,
@@ -31,7 +29,7 @@ let users = [{
     "name": "Alice",
     "age": 20,
     "email": "Alice123@example.com",
-    "password": "$argon2i$v=19$m=4096,t=3,p=1$Zsj93OrxC2UQdsozW2htjA$+GFhZGluLQ9SQTQsxbn3wgkNmeemQcKojY+ioE5rNPM",
+    "password": bcrypt.hashSync("1StrongPassword!", bcryptRounds),
 },
 {
     "id": 3,
@@ -39,7 +37,7 @@ let users = [{
     "name": "Ad Minder",
     "age": 20,
     "email": "AdMinder@example.com",
-    "password": "$argon2i$v=19$m=4096,t=3,p=1$S6zkZGbGWPNjj8QPZnDCzA$zpdj/NQWE8A1cqtskmNeCW6dvtFKxTR0OvJXA6AV+gw",
+    "password": bcrypt.hashSync("@qr3MawrtT34!W-", bcryptRounds),
 }];
 
 // Adds a new user
@@ -59,7 +57,7 @@ app.post('/user', async(req, res) => {
     }
     // <Causes duplicate ids after deletion>
     newUser.id = users.length + 1;
-    newUser.password = await argon2.hash(newUser.password);
+    newUser.password = bcrypt.hashSync(newUser.password, bcryptRounds);
     users.push(user);
 
     res.send('Created new user');
@@ -72,7 +70,7 @@ app.get('/user', async(req, res) => {
 });
 
 // Return user data for the user for whom the field :search has value :val
-app.get('/user/:search/:val', (req, res) => {
+app.get('/user/:search/:val', async(req, res) => {
     const search = req.params.search;
     const val = req.params.val;
 
@@ -103,7 +101,7 @@ app.delete('/user/:id', (req, res) => {
 });
 
 // Replace user data for user :id
-app.post('/user/:id', (req, res) => {
+app.post('/user/:id', async(req, res) => {
     const id = req.params.id;
     const user = req.body;
 
@@ -121,7 +119,7 @@ app.post('/user/:id', (req, res) => {
 });
 
 // Replace user data for user :id
-app.post('/user/:id', (req, res) => {
+app.post('/user/:id', async(req, res) => {
     const id = req.params.id;
     const user = req.body;
 
@@ -138,13 +136,14 @@ app.post('/user/:id', (req, res) => {
     res.status(404).send('No user found with ID: ' + id);
 });
 
+// <Doesn't return error on invalid username>
 // Checks the username/password combination
 app.get('/login', async(req, res) => {
     const credentials = req.body;
 
     for (let user of users) {
         if (user.usernames === credentials.username) {
-            if (argon2.verify(user.password, credentials.password))
+            if (bcrypt.compareSync(user.password, credentials.password))
                 res.send("Logged in successfully");
             else
                 res.status(400).send("Incorrect password or username");
