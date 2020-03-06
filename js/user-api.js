@@ -6,7 +6,7 @@ const cors = require('cors');
 const bcrypt = require('bcrypt');
 
 const app = express();
-const port = 3000;
+const port = process.env.port || 3000;
 const bcryptRounds = 12;
 
 app.use(cors());
@@ -19,7 +19,7 @@ let users = [{
     "id": 1,
     "username": "JoJohnson",
     "name": "Johnathan Johnson",
-    "age": 20,
+    "age": 23,
     "email": "J.Johnson@example.com",
     "password": bcrypt.hashSync("Jojo123", bcryptRounds),
 },
@@ -27,7 +27,7 @@ let users = [{
     "id": 2,
     "username": "Alice",
     "name": "Alice",
-    "age": 20,
+    "age": 46,
     "email": "Alice123@example.com",
     "password": bcrypt.hashSync("1StrongPassword!", bcryptRounds),
 },
@@ -35,7 +35,7 @@ let users = [{
     "id": 3,
     "username": "Admin",
     "name": "Ad Minder",
-    "age": 20,
+    "age": 35,
     "email": "AdMinder@example.com",
     "password": bcrypt.hashSync("@qr3MawrtT34!W-", bcryptRounds),
 }];
@@ -60,7 +60,7 @@ app.post('/user', async(req, res) => {
     newUser.password = bcrypt.hashSync(newUser.password, bcryptRounds);
     users.push(user);
 
-    res.send('Created new user');
+    res.send(`Successfully created new user with ID: ${newUser.id}`);
 });
 
 // Return a list of all users
@@ -115,9 +115,10 @@ app.post('/user/:id', async(req, res) => {
         }
     }
 
-    res.status(404).send('No user found with ID: ' + id);
+    res.status(404).send(`No user found with ID: ${id}`);
 });
 
+// <Doesn't check constraints>
 // Replace user data for user :id
 app.post('/user/:id', async(req, res) => {
     const id = req.params.id;
@@ -133,7 +134,7 @@ app.post('/user/:id', async(req, res) => {
         }
     }
 
-    res.status(404).send('No user found with ID: ' + id);
+    res.status(404).send(`No user found with ID: ${id}`);
 });
 
 // <Doesn't return error on invalid username>
@@ -153,3 +154,5 @@ app.get('/login', async(req, res) => {
 });
 
 app.listen(port, () => console.log(`Listening on port ${port}!`));
+
+module.exports = app;
