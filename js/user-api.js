@@ -153,6 +153,4 @@ app.get('/login', async(req, res) => {
     }
 });
 
-app.listen(port, () => console.log(`Listening on port ${port}!`));
-
-module.exports = app;
+module.exports = app.listen(port, () => console.log(`Listening on port ${port}!`));

@@ -1,6 +1,4 @@
-var chai = require('chai');
-chai.use(require('chai-http'));
-var api = require('../js/user-api');
-
-
-
+let server = require('../js/user-api');
+let chai = require('chai');
+let chaiHttp = require('chai-http');
+let expect = chai.expect;
