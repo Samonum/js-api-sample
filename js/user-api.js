@@ -58,9 +58,11 @@ app.post('/user', async(req, res) => {
     // <Causes duplicate ids after deletion>
     newUser.id = users.length + 1;
     newUser.password = bcrypt.hashSync(newUser.password, bcryptRounds);
-    users.push(user);
+    users.push(newUser);
 
-    res.send(`Successfully created new user with ID: ${newUser.id}`);
+    delete newUser["password"];
+
+    res.send(newUser);
 });
 
 // Return a list of all users
@@ -100,25 +102,8 @@ app.delete('/user/:id', (req, res) => {
     res.send('User has been removed');
 });
 
-// Replace user data for user :id
-app.post('/user/:id', async(req, res) => {
-    const id = req.params.id;
-    const user = req.body;
-
-    // Update the user
-    for (let i = 0; i < users.length; i++) {
-
-        if (users[i].is === id) {
-            users[i] = user;
-            res.send('User data has been updated');
-            return
-        }
-    }
-
-    res.status(404).send(`No user found with ID: ${id}`);
-});
-
 // <Doesn't check constraints>
+// <Doesn't encrypt password>
 // Replace user data for user :id
 app.post('/user/:id', async(req, res) => {
     const id = req.params.id;
@@ -129,7 +114,8 @@ app.post('/user/:id', async(req, res) => {
 
         if (users[i].id === id) {
             users[i] = user;
-            res.send('User data has been updated');
+            delete user["password"];
+            res.send(user);
             return
         }
     }
