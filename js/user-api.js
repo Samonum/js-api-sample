@@ -14,6 +14,8 @@ app.use(cors());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
+// The highest ID that has been added to the database
+let maxId = 3;
 
 let users = [{
     "id": 1,
@@ -40,23 +42,30 @@ let users = [{
     "password": bcrypt.hashSync("@qr3MawrtT34!W-", bcryptRounds),
 }];
 
+let checkExists = newUser => {
+    for (let user of users) {
+        if (user.username === newUser.username) {
+            return 'Username already exists';
+        }
+        if (user.email === newUser.email) {
+            return 'Email already exists';
+        }
+    }
+    return false;
+}
+
 // Adds a new user
 app.post('/user', async(req, res) => {
     const newUser = req.body;
     
-    // Check if username and email are unique
-    for (let user of users) {
-        if (user.username === newUser.username) {
-            res.status(400).send('Username already exists');
-            return;
-        }
-        if (user.email === newUser.email) {
-            res.status(400).send('Email already exists');
-            return;
-        }
+    let exists = checkExists(newUser);
+    if (exists)
+    {
+        res.status(400).send(exists)
     }
-    // <Causes duplicate ids after deletion>
-    newUser.id = users.length + 1;
+    // Check if username and email are unique
+    // Increase maxId and set it as the ID for the new user
+    newUser.id = ++maxId;
     newUser.password = bcrypt.hashSync(newUser.password, bcryptRounds);
     users.push(newUser);
 
@@ -95,24 +104,31 @@ app.delete('/user/:id', (req, res) => {
 
     // Remove user
     users = users.filter(i => {
+        res.send('User has been removed');
         return (i.id !== id);
     });
 
-    // <Returns success even when no user has been removed>
-    res.send('User has been removed');
+    res.status(400).send('User not found');
 });
 
-// <Doesn't check constraints>
-// <Doesn't encrypt password>
 // Replace user data for user :id
 app.post('/user/:id', async(req, res) => {
     const id = req.params.id;
     const user = req.body;
 
+    user.id = id;
+
+    let exists = checkExists(user);
+    if (exists)
+    {
+        res.status(400).send(exists)
+    }
+
     // Update the user
     for (let i = 0; i < users.length; i++) {
 
         if (users[i].id === id) {
+            user.password = bcrypt.hashSync(user.password, bcryptRounds);
             users[i] = user;
             delete user["password"];
             res.send(user);
@@ -123,7 +139,6 @@ app.post('/user/:id', async(req, res) => {
     res.status(404).send(`No user found with ID: ${id}`);
 });
 
-// <Doesn't return error on invalid username>
 // Checks the username/password combination
 app.get('/login', async(req, res) => {
     const credentials = req.body;
@@ -133,10 +148,11 @@ app.get('/login', async(req, res) => {
             if (bcrypt.compareSync(user.password, credentials.password))
                 res.send("Logged in successfully");
             else
-                res.status(400).send("Incorrect password or username");
+                res.status(400).send("Incorrect password");
             return;
         }
     }
+    res.status(400).send("User not found");
 });
 
 module.exports = app.listen(port, () => console.log(`Listening on port ${port}!`));
