@@ -20,9 +20,6 @@ app.use(cors());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
-// The highest ID that has been added to the database
-let maxId = 3;
-
 let users = [{
     "id": 1,
     "username": "JoJohnson",
@@ -97,7 +94,7 @@ app.delete('/user/:id', async(req, res) => {
     User.findOneAndDelete({_id:id}, (err, user) => {
         if(err)
             return res.status(404).send("Unable to remove user");
-        res.send(user);
+        res.send("User deleted successfully");
     });
     
 });
@@ -108,11 +105,14 @@ app.post('/user/:id', async(req, res) => {
     const user = req.body;
     if(typeof user.password !== 'undefined')
         user.password = bcrypt.hashSync(newUser.password, bcryptRounds);
-    User.updateOne({_id: id}, user, (err, user) => {
+    User.updateOne({_id: id}, user, (err, result) => {
         if(err)
             return res.status(404).send(`Unable to find user ${id}`);
         delete user["password"];
-        res.send(user);
+        if(result.n === 0)
+            res.status(400).send(`Unable to update user`)
+        else
+            res.send("User updated successfully");
     });
 });
 
@@ -123,13 +123,11 @@ app.get('/login', async(req, res) => {
     User.find({username: credentials.username}, (err, user) =>{
         if (user.length === 0)
             return res.status(404).send('User not found');
-        if (user.usernames === credentials.username) {
-            if (bcrypt.compareSync(user.password, credentials.password))
-                res.send("Logged in successfully");
-            else
-                res.status(400).send("Incorrect password");
-            return;
-        }
+        if (bcrypt.compareSync(user.password, credentials.password))
+            res.send("Logged in successfully");
+        else
+            res.status(400).send("Incorrect password");
+        return;
     });
 });
 
