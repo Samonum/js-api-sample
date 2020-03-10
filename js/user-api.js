@@ -1,13 +1,19 @@
 // Welcome to the user database
 
-const express = require('express')
+const mongoose = require('mongodb');
+const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const bcrypt = require('bcrypt');
 
+const User = require("models/user-model"); 
+
 const app = express();
 const port = process.env.port || 3000;
 const bcryptRounds = 12;
+const db = process.env.db || 'mongodb://mongo:27017';
+
+mongoose.connect(db, {useNewUrlParser: true, useUnifiedTopology: true});
 
 app.use(cors());
 
@@ -42,42 +48,31 @@ let users = [{
     "password": bcrypt.hashSync("@qr3MawrtT34!W-", bcryptRounds),
 }];
 
-let checkExists = newUser => {
-    for (let user of users) {
-        if (user.username === newUser.username) {
-            return 'Username already exists';
-        }
-        if (user.email === newUser.email) {
-            return 'Email already exists';
-        }
-    }
-    return false;
-}
-
 // Adds a new user
 app.post('/user', async(req, res) => {
-    const newUser = req.body;
-    
-    let exists = checkExists(newUser);
-    if (exists)
-    {
-        res.status(400).send(exists)
-    }
-    // Check if username and email are unique
-    // Increase maxId and set it as the ID for the new user
-    newUser.id = ++maxId;
+    let newUser = req.body;
     newUser.password = bcrypt.hashSync(newUser.password, bcryptRounds);
-    users.push(newUser);
+    new User(newUser).save(err =>
+        {
+            if (err)
+            {
+                if(err.code == 11000)
+                    res.status(400).send("A user with that username or email already exists.");
+                else
+                    res.status(400).send("Unable to add user to the database.");
+            }
+            
+            delete newUser["password"];
+            res.send(newUser);
+        });
 
-    delete newUser["password"];
-
-    res.send(newUser);
 });
 
 // Return a list of all users
 app.get('/user', async(req, res) => {
-    // <Returns passwords>
-    res.json(users);
+    User.find({}, (err, users) => {
+        res.send(users);
+    });
 });
 
 // Return user data for the user for whom the field :search has value :val
