@@ -94,10 +94,10 @@ app.delete('/user/:id', async(req, res) => {
     const id = req.params.id;
 
     // Remove user
-    User.deleteOne({_id:id}, err => {
+    User.findOneAndDelete({_id:id}, (err, user) => {
         if(err)
             return res.status(404).send("Unable to remove user");
-        res.send("Removed user");
+        res.send(user);
     });
     
 });
@@ -120,7 +120,7 @@ app.post('/user/:id', async(req, res) => {
 app.get('/login', async(req, res) => {
     const credentials = req.body;
 
-    User.get({username: credentials.username}, (err, user) =>{
+    User.find({username: credentials.username}, (err, user) =>{
         if (user.length === 0)
             return res.status(404).send('User not found');
         if (user.usernames === credentials.username) {
