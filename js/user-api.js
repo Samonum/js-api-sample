@@ -52,7 +52,7 @@ let users = [{
 app.post('/user', async(req, res) => {
     let newUser = req.body;
     newUser.password = bcrypt.hashSync(newUser.password, bcryptRounds);
-    new User(newUser).save(err =>
+    new User(newUser).save((err, user) =>
         {
             if (err)
             {
@@ -63,8 +63,8 @@ app.post('/user', async(req, res) => {
                 return;
             }
             
-            delete newUser["password"];
-            res.send(newUser);
+            delete user["password"];
+            res.send(user);
         });
 
 });
@@ -82,64 +82,47 @@ app.get('/user/:search/:val', async(req, res) => {
     const val = req.params.val;
 
     // Searching users for the right key value pair
-    for (let user of users) {
-        if (user[search] === val) {
-            delete user.password;
-            res.json(user);
-            return;
-        }
-    }
-
-    // Sending 404 when not found something is a good practice
-    res.status(404).send('User not found');
+    User.find({[search] : val}, (err, users) => {
+        if (users.length === 0)
+            return res.status(404).send("User not found");
+        return res.send(users);
+    });
 });
 
 // Removes a user
-app.delete('/user/:id', (req, res) => {
+app.delete('/user/:id', async(req, res) => {
     const id = req.params.id;
 
     // Remove user
-    users = users.filter(i => {
-        res.send('User has been removed');
-        return (i.id !== id);
+    User.deleteOne({_id:id}, err => {
+        if(err)
+            return res.status(404).send("Unable to remove user");
+        res.send("Removed user");
     });
-
-    res.status(400).send('User not found');
+    
 });
 
 // Replace user data for user :id
 app.post('/user/:id', async(req, res) => {
     const id = req.params.id;
     const user = req.body;
-
-    user.id = id;
-
-    let exists = checkExists(user);
-    if (exists)
-    {
-        res.status(400).send(exists)
-    }
-
-    // Update the user
-    for (let i = 0; i < users.length; i++) {
-
-        if (users[i].id === id) {
-            user.password = bcrypt.hashSync(user.password, bcryptRounds);
-            users[i] = user;
-            delete user["password"];
-            res.send(user);
-            return
-        }
-    }
-
-    res.status(404).send(`No user found with ID: ${id}`);
+    if(typeof user.password !== 'undefined')
+        user.password = bcrypt.hashSync(newUser.password, bcryptRounds);
+    User.updateOne({_id: id}, user, (err, user) => {
+        if(err)
+            return res.status(404).send(`Unable to find user ${id}`);
+        delete user["password"];
+        res.send(user);
+    });
 });
 
 // Checks the username/password combination
 app.get('/login', async(req, res) => {
     const credentials = req.body;
 
-    for (let user of users) {
+    User.get({username: credentials.username}, (err, user) =>{
+        if (user.length === 0)
+            return res.status(404).send('User not found');
         if (user.usernames === credentials.username) {
             if (bcrypt.compareSync(user.password, credentials.password))
                 res.send("Logged in successfully");
@@ -147,8 +130,7 @@ app.get('/login', async(req, res) => {
                 res.status(400).send("Incorrect password");
             return;
         }
-    }
-    res.status(400).send("User not found");
+    });
 });
 
 module.exports = app.listen(port, () => console.log(`Listening on port ${port}!`));
