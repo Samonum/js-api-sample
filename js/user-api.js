@@ -1,12 +1,12 @@
 // Welcome to the user database
 
-const mongoose = require('mongodb');
+const mongoose = require('mongoose');
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const bcrypt = require('bcrypt');
 
-const User = require("models/user-model"); 
+const User = require("./models/user-model"); 
 
 const app = express();
 const port = process.env.port || 3000;
