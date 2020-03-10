@@ -60,6 +60,7 @@ app.post('/user', async(req, res) => {
                     res.status(400).send("A user with that username or email already exists.");
                 else
                     res.status(400).send("Unable to add user to the database.");
+                return;
             }
             
             delete newUser["password"];
