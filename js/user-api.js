@@ -20,30 +20,6 @@ app.use(cors());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
-let users = [{
-    "id": 1,
-    "username": "JoJohnson",
-    "name": "Johnathan Johnson",
-    "age": 23,
-    "email": "J.Johnson@example.com",
-    "password": bcrypt.hashSync("Jojo123", bcryptRounds),
-},
-{
-    "id": 2,
-    "username": "Alice",
-    "name": "Alice",
-    "age": 46,
-    "email": "Alice123@example.com",
-    "password": bcrypt.hashSync("1StrongPassword!", bcryptRounds),
-},
-{
-    "id": 3,
-    "username": "Admin",
-    "name": "Ad Minder",
-    "age": 35,
-    "email": "AdMinder@example.com",
-    "password": bcrypt.hashSync("@qr3MawrtT34!W-", bcryptRounds),
-}];
 
 // Adds a new user
 app.post('/user', async(req, res) => {
