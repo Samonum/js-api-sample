@@ -93,6 +93,7 @@ app.post('/user/:id', async(req, res) => {
 });
 
 // Checks the username/password combination
+// Does NOT return any form of authentication
 app.get('/login', async(req, res) => {
     const credentials = req.body;
 
