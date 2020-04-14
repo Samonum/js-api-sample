@@ -85,7 +85,7 @@ app.post('/user/:id', async(req, res) => {
     User.updateOne({_id: id}, user, (err, result) => {
         if(err)
             return res.status(404).send(`Unable to find user ${id}`);
-        delete user["password"];
+        user["password"] = undefined;
         if(result.n === 0)
             res.status(400).send(`Unable to update user`)
         else
