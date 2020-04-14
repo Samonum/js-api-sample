@@ -37,7 +37,7 @@ app.post('/user', async(req, res) => {
                 return;
             }
             
-            delete user["password"];
+            user["password"] = undefined;
             res.send(user);
         });
 
