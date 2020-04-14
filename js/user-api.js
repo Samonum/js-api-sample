@@ -24,7 +24,7 @@ app.use(bodyParser.json());
 // Adds a new user
 app.post('/user', async(req, res) => {
     let newUser = req.body;
-    if(typeof user.password !== 'undefined')
+    if(typeof newUser.password !== 'undefined')
         newUser.password = bcrypt.hashSync(newUser.password, bcryptRounds);
     new User(newUser).save((err, user) =>
         {
